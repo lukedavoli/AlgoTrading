@@ -1,4 +1,5 @@
 .pytest_cache
 .vscode
+venv
 data/candles.db
 data/__pycache__
