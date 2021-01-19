@@ -1,2 +1,4 @@
+.pytest_cache
+.vscode
 data/candles.db
 data/__pycache__
