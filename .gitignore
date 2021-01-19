@@ -3,3 +3,4 @@
 venv
 data/candles.db
 data/__pycache__
+data/db_updates
