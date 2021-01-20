@@ -31,7 +31,7 @@ if __name__ == '__main__':
 	for market in MARKETS:
 		time.sleep(1)
 		print("Requesting candles for market {} from Bittrex API".format(market))
-		candles = bittrex.get_candles(
+		candles = bittrex.get_recent_candles(
 			symbol=market, candle_interval='MINUTE_5', candle_type='TRADE'
 		)
 		print("Adding candles for market {} to SQLite database".format(market))

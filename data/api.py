@@ -184,6 +184,36 @@ class Bittrex:
         return ticker
 
 
+    """Get recent candle data for a given market
+    Returns: List of dictionaries of the format
+    [
+        {
+            "startsAt": "string (date-time)",
+            "open": "number (double)",
+            "high": "number (double)",
+            "low": "number (double)",
+            "close": "number (double)",
+            "volume": "number (double)",
+            "quoteVolume": "number (double)"
+        }
+    ]
+    Parameters:
+    symbol - market symbol, usually of the form 'BTC-USDT'
+    candle_type - can be either 'TRADE' or 'MIDPOINT'
+    candle_interval - the amount of time encompassing each candle, may be either 'MINUTE_1', 'MINUTE_5', 'HOUR_1' or 'DAY_1'
+    """  
+    def get_recent_candles(self, symbol, candle_type, candle_interval):
+        request_url = '{base_url}/markets/{marketSymbol}/candles/{candleType}/{candleInterval}/recent'.format(
+            base_url=self.API_BASE_URL,
+            marketSymbol=symbol,
+            candleType=candle_type,
+            candleInterval=candle_interval
+        )
+        response = requests.get(request_url)
+        candles = json.loads(response.content)
+        return candles
+
+
     """Get historical candle data for a given market
     Returns: List of dictionaries of the format
     [
@@ -202,12 +232,13 @@ class Bittrex:
     candle_type - can be either 'TRADE' or 'MIDPOINT'
     candle_interval - the amount of time encompassing each candle, may be either 'MINUTE_1', 'MINUTE_5', 'HOUR_1' or 'DAY_1'
     """  
-    def get_candles(self, symbol, candle_type, candle_interval):
-        request_url = '{base_url}/markets/{marketSymbol}/candles/{candleType}/{candleInterval}/recent'.format(
+    def get_historical_candles(self, symbol, candle_type, candle_interval, year, month, day):
+        request_url = '{base_url}/markets/{marketSymbol}/candles/{candleType}/{candleInterval}/historical/{year}/{month}/{day}'.format(
             base_url=self.API_BASE_URL,
             marketSymbol=symbol,
             candleType=candle_type,
-            candleInterval=candle_interval
+            candleInterval=candle_interval,
+            year=year, month=month, day=day
         )
         response = requests.get(request_url)
         candles = json.loads(response.content)
