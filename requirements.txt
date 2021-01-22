@@ -2,9 +2,6 @@ certifi==2020.12.5
 chardet==4.0.0
 idna==2.10
 PyMySQL==1.0.2
-<<<<<<< HEAD
 PyYAML==5.4.1
-=======
->>>>>>> a1cd5fa5f2fa9bb331292ccead179416b060441e
 requests==2.25.1
 urllib3==1.26.2
