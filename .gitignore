@@ -3,4 +3,5 @@
 venv
 data/candles.db
 data/__pycache__
-data/db_updates
+data/db_updates/
+data/credentials.yaml

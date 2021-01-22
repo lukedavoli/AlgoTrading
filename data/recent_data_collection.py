@@ -1,4 +1,4 @@
-import sqlite3
+import yaml
 import time
 import sys
 import os
@@ -14,27 +14,30 @@ MARKETS = [
 ]
 
 if __name__ == '__main__':
+	# Redirect standard output to file in db_updates folder
 	db_updt_path = 'db_updates'
 	if not os.path.exists(db_updt_path): os.makedirs(db_updt_path)
 	date_time = datetime.now().strftime("%Y-%m-%d_%H-%M")
 	sys.stdout = open('{}/{}.txt'.format(db_updt_path, date_time), 'w')
 
+	# Create API object
 	bittrex = Bittrex()
+
+	# Open connection with database
 	print("Opening database connection")
-	db = Dao()
+	db_login = None
+	with open('credentials.yaml') as file:
+		db_login = yaml.load(file, Loader=yaml.FullLoader)['mysqldb']
+	db = Dao(db_login['user'], db_login['password'], db_login['host'], db_login['port'])
 
-	try:
-		db.create_table()
-	except sqlite3.OperationalError:
-		pass
-
+	# Request recent data from Bittrex API and add it to the database
 	for market in MARKETS:
 		time.sleep(1)
 		print("Requesting candles for market {} from Bittrex API".format(market))
 		candles = bittrex.get_recent_candles(
 			symbol=market, candle_interval='MINUTE_5', candle_type='TRADE'
 		)
-		print("Adding candles for market {} to SQLite database".format(market))
+		print("Adding candles for market {} to MySQL database".format(market))
 		cndl_cnt = 0
 		for candle in candles:
 			next_candle = Candle(market=market, btrx_dict=candle)
@@ -43,4 +46,4 @@ if __name__ == '__main__':
 		print("Added {} candles to database".format(cndl_cnt))
 
 	print("Closing database connection")
-	db.close_connection()
+	db.close()

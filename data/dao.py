@@ -1,54 +1,22 @@
-import sqlite3
-from  sqlite3 import Error
+import pymysql
+from datetime import datetime
 
 class Dao:
-	def __init__(self):
-		self.connection = self.create_connection('candles.db')
+	def __init__(self, user, password, host, port):
+		self.connection = pymysql.connect(host=host, user=user, passwd=password)
 		self.cursor = self.connection.cursor()
+		self.cursor.execute("USE crypto;")
 
 
-	def create_connection(self, db_file):
-		connection = None
-		try:
-			connection = sqlite3.connect(db_file)
-			return connection
-		except Error as e:
-			print(e)
-
-		return connection
-
-
-	def close_connection(self):
+	def close(self):
+		self.cursor.close()
 		self.connection.close()
 
 
-	def create_table(self):
-		self.cursor.execute("""CREATE TABLE candles (
-			market text, 
-			date_time text, 
-			open real, 
-			high real, 
-			low real, 
-			close real,
-			volume real, 
-			quote_volume real,
-			PRIMARY KEY (market, date_time)
-		)""")
-		self.connection.commit()
-
-
 	def add_candle(self, candle):
-		self.cursor.execute("""INSERT OR IGNORE INTO candles VALUES (
-			:market, :date_time,
-			:open, :high, :low, :close, 
-			:volume, :quote_volume 
-			)""",
-			{
-				'market': candle.market, 'date_time': candle.date_time,
-				'open': candle.open_, 'high': candle.high, 'low': candle.low, 'close': candle.close,
-				'volume': candle.volume, 'quote_volume': candle.quote_volume
-			}
-		)
+		date_time_str = datetime.strftime(candle.date_time, "%Y-%m-%d %H:%M:%S")
+		query = "INSERT IGNORE INTO candles VALUES ('%s', '%s', %f, %f, %f, %f, %f);"%(candle.market, date_time_str, float(candle.open_), float(candle.high), float(candle.low), float(candle.close), float(candle.quote_volume))
+		self.cursor.execute(query)
 		self.connection.commit()
 
 
