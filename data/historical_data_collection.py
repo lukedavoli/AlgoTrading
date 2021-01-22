@@ -1,5 +1,5 @@
-import sqlite3
 import time
+import yaml
 import sys
 import os
 from datetime import datetime, timedelta
@@ -14,16 +14,18 @@ MARKETS = [
 ]
 
 if __name__ == '__main__':
+	# Create API object
 	bittrex = Bittrex()
-	print("Opening database connection")
-	db = Dao()
 
-	try:
-		db.create_table()
-	except sqlite3.OperationalError:
-		pass
+	# Open connection with database
+	print("Opening database connection")
+	db_login = None
+	with open('credentials.yaml') as file:
+		db_login = yaml.load(file, Loader=yaml.FullLoader)['mysqldb']
+	db = Dao(db_login['user'], db_login['password'], db_login['host'], db_login['port'])
     
-	one_year_ago = datetime.now() - timedelta(days=365)
+
+	one_year_ago = datetime.now() - timedelta(days=387)
 	for market in MARKETS:
 		while one_year_ago < datetime.now():
 			time.sleep(1)
@@ -32,7 +34,7 @@ if __name__ == '__main__':
 				symbol=market, candle_interval='MINUTE_5', candle_type='TRADE', year=one_year_ago.year,
 				month=one_year_ago.month, day=one_year_ago.day
 			)
-			print("Adding candles for market {} on {} to SQLite database".format(market, datetime.strftime(one_year_ago, "%Y-%m-%d")))
+			print("Adding candles for market {} on {} to database".format(market, datetime.strftime(one_year_ago, "%Y-%m-%d")))
 			cndl_cnt = 0
 			for candle in candles:
 				next_candle = Candle(market=market, btrx_dict=candle)
@@ -42,4 +44,4 @@ if __name__ == '__main__':
 			one_year_ago = one_year_ago + timedelta(days=1)
 
 	print("Closing database connection")
-	db.close_connection()
+	db.close()
