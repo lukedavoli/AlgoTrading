@@ -9,7 +9,6 @@ class Candle:
             self.high = btrx_dict['high']
             self.low = btrx_dict['low']
             self.close = btrx_dict['close']
-            self.volume = btrx_dict['volume']
             self.quote_volume = btrx_dict['quoteVolume']
         elif db_tuple:
             self.market = db_tuple[0]
@@ -18,8 +17,7 @@ class Candle:
             self.high = db_tuple[3]
             self.low = db_tuple[4]
             self.close = db_tuple[5]
-            self.volume = db_tuple[6]
-            self.quote_volume = db_tuple[7]
+            self.quote_volume = db_tuple[6]
         else:
             raise ValueError("arguments 'market' and 'btrx_dict' must be provided together or argument 'db_tuple'"
                              "alone, all arguments must be explicitly named.")
