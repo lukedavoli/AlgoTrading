@@ -1,7 +1,9 @@
 .pytest_cache
 .vscode
 venv
-data/candles.db
-data/__pycache__
-data/db_updates
-data/credentials.yaml
+crypto/data/__pycache__
+crypto/data/db_updates
+crypto/credentials.yaml
+crypto/__pycache__
+crypto/data_collection/__pycache__
+crypto/data_collection/db_updates

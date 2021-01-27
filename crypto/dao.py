@@ -1,9 +1,13 @@
 import pymysql
+import yaml
 from datetime import datetime
 
 class Dao:
-	def __init__(self, user, password, host, port):
-		self.connection = pymysql.connect(host=host, user=user, passwd=password)
+	def __init__(self):
+		db_login = None
+		with open('credentials.yaml') as file:
+			login = yaml.load(file, Loader=yaml.FullLoader)['mysqldb']
+		self.connection = pymysql.connect(host=login['host'], user=login['user'], passwd=login['password'])
 		self.cursor = self.connection.cursor()
 		self.cursor.execute("USE crypto;")
 

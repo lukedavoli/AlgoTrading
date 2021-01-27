@@ -3,6 +3,8 @@ import yaml
 import sys
 import os
 from datetime import datetime, timedelta, date
+
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from candle import Candle
 from api import Bittrex
 from dao import Dao
@@ -21,10 +23,7 @@ if __name__ == '__main__':
 
 	# Open connection with database
 	print("Opening database connection")
-	db_login = None
-	with open('credentials.yaml') as file:
-		db_login = yaml.load(file, Loader=yaml.FullLoader)['mysqldb']
-	db = Dao(db_login['user'], db_login['password'], db_login['host'], db_login['port'])
+	db = Dao()
 	
 	for market in MARKETS:
 		one_year_ago = date.today() - timedelta(days=DAYS_AGO)

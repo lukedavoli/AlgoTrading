@@ -3,6 +3,8 @@ import time
 import sys
 import os
 from datetime import datetime
+
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from candle import Candle
 from api import Bittrex
 from dao import Dao
@@ -14,21 +16,19 @@ MARKETS = [
 ]
 
 if __name__ == '__main__':
-	# Redirect standard output to file in db_updates folder
-	db_updt_path = 'db_updates'
-	if not os.path.exists(db_updt_path): os.makedirs(db_updt_path)
-	date_time = datetime.now().strftime("%Y-%m-%d_%H-%M")
-	sys.stdout = open('{}/{}.txt'.format(db_updt_path, date_time), 'w')
+	if len(sys.argv) > 1 and sys.argv[1] == 'tofile':
+		# Redirect standard output to file in db_updates folder
+		db_updt_path = 'data_collection/db_updates'
+		if not os.path.exists(db_updt_path): os.makedirs(db_updt_path)
+		date_time = datetime.now().strftime("%Y-%m-%d_%H-%M")
+		sys.stdout = open('{}/{}.txt'.format(db_updt_path, date_time), 'w')
 
 	# Create API object
 	bittrex = Bittrex()
 
 	# Open connection with database
 	print("Opening database connection")
-	db_login = None
-	with open('credentials.yaml') as file:
-		db_login = yaml.load(file, Loader=yaml.FullLoader)['mysqldb']
-	db = Dao(db_login['user'], db_login['password'], db_login['host'], db_login['port'])
+	db = Dao()
 
 	# Request recent data from Bittrex API and add it to the database
 	for market in MARKETS:
