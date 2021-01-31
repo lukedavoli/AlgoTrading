@@ -1,3 +1,5 @@
+import os
+import sys
 import pymysql
 import yaml
 from datetime import datetime

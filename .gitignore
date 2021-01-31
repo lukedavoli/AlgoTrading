@@ -4,6 +4,9 @@ venv
 crypto/data/__pycache__
 crypto/data/db_updates
 crypto/credentials.yaml
+crypto/backtesting/credentials.yaml
 crypto/__pycache__
 crypto/data_collection/__pycache__
 crypto/data_collection/db_updates
+crypto/backtesting/__pycache__/
+crypto/backtesting/candles.csv
