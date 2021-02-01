@@ -53,7 +53,7 @@ class BuyAndHold(bt.Strategy):
 
 
 class SMACrossover(bt.Strategy):
-    params = (('sma_short_length', 12), ('sma_long_length', 288),)
+    params = (('sma_fast', 12), ('sma_slow', 288),)
 
     def __init__(self):
         self.dataclose = self.datas[0].close
@@ -62,11 +62,11 @@ class SMACrossover(bt.Strategy):
         self.buycomm = None
 
         # Add a MovingAverageSimple indicator
-        self.sma_shortterm = bt.indicators.SimpleMovingAverage(
-            self.datas[0], period=self.params.sma_short_length
+        self.sma_fast = bt.indicators.SimpleMovingAverage(
+            self.datas[0], period=self.params.sma_fast
         )
-        self.sma_longterm = bt.indicators.SimpleMovingAverage(
-            self.datas[0], period=self.params.sma_long_length
+        self.sma_slow = bt.indicators.SimpleMovingAverage(
+            self.datas[0], period=self.params.sma_slow
         )
 
     def notify_order(self, order):
@@ -109,12 +109,12 @@ class SMACrossover(bt.Strategy):
         if self.order:  # If an order already exists...
             return  # ...then we cannot send another one, leave method
         if not self.position:  # "If we are not in a position...
-            if self.sma_shortterm > self.sma_longterm * 1.03:  # ...and the short-term SMA is higher than the long-term SMA...
+            if self.sma_fast > self.sma_slow * 1.03:  # ...and the short-term SMA is higher than the long-term SMA...
                 # ...then create a buy order and store a reference to it
                 self.log('BUY CREATE, %.2f' % self.dataclose[0])
                 self.order = self.buy()
         else:  # If we are already in a position...
-            if self.sma_shortterm < self.sma_longterm * 0.97:  # ...and the short-term SMA is lower than the long-term SMA
+            if self.sma_fast < self.sma_slow * 0.97:  # ...and the short-term SMA is lower than the long-term SMA
                 # ...then create a sell order and store a reference to it
                 self.log('SELL CREATE, %.2f' % self.dataclose[0])
                 self.order = self.sell()

@@ -7,22 +7,12 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from dao import Dao
 
 
-def cerebro_setup(
-    data, strategy, cash=10000, betsizerpercent=20, commission=0.004,
-    sma_short_length=None, sma_long_length=None
-):
-
+def cerebro_setup(data, cash=10000, betsizerpercent=20, commission=0.004):
     cerebro = bt.Cerebro()
     cerebro.adddata(bt.feeds.PandasData(dataname=data))
     cerebro.broker.setcash(cash)
     cerebro.addsizer(bt.sizers.PercentSizer, percents=betsizerpercent)
     cerebro.broker.setcommission(commission=commission)
-    if sma_short_length and sma_long_length:
-        cerebro.addstrategy(
-            strategy, sma_short_length=sma_short_length, sma_long_length=sma_long_length
-        )
-    else:
-        cerebro.addstrategy(strategy)
     return cerebro
 
 
