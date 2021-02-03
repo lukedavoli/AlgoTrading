@@ -1,0 +1,9 @@
+{
+    "cash": 10000,
+    "commission": 0.004,
+    "strategy": "SMACrossover",
+    "markets": ["EOS-USDT", "NEO-USDT", "BAT-USDT"],
+    "parameters": [
+        {"fast": 50, "slow": 1000}
+    ]
+}

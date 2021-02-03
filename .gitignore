@@ -9,4 +9,5 @@ crypto/__pycache__
 crypto/data_collection/__pycache__
 crypto/data_collection/db_updates
 crypto/backtesting/__pycache__/
-crypto/backtesting/candles.csv
+crypto/backtesting/*.csv
+crypto/backtesting/candles/*

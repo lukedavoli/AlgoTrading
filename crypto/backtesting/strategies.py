@@ -56,18 +56,14 @@ class SMACrossover(bt.Strategy):
     params = (('sma_fast', 12), ('sma_slow', 288),)
 
     def __init__(self):
-        self.dataclose = self.datas[0].close
-        self.order = None
-        self.buyprice = None
-        self.buycomm = None
-
-        # Add a MovingAverageSimple indicator
-        self.sma_fast = bt.indicators.SimpleMovingAverage(
-            self.datas[0], period=self.params.sma_fast
-        )
-        self.sma_slow = bt.indicators.SimpleMovingAverage(
-            self.datas[0], period=self.params.sma_slow
-        )
+        self.markets = dict()
+        for d in self.datas:
+            dn = d._name
+            self.markets[dn] = dict(
+                close = d.close, order = None, buyprice = None, buycomm = None,
+                sma_fast = bt.indicators.SimpleMovingAverage(d, period=self.params.sma_fast),
+                sma_slow = bt.indicators.SimpleMovingAverage(d, period=self.params.sma_slow),
+            )
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:  # If the order is only submitted or accepted...
@@ -91,8 +87,9 @@ class SMACrossover(bt.Strategy):
                 ))
             self.bar_executed = len(self)
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
-            self.log('Order Canceled/Margin/Rejected')
-        self.order = None
+            # self.log('Order Canceled/Margin/Rejected')
+            pass
+        self.markets[order.info.addinfo['dn']]['order'] = None
 
     def notify_trade(self, trade):
         if not trade.isclosed:  # If our current trade has not yet closed...
@@ -106,15 +103,19 @@ class SMACrossover(bt.Strategy):
         print('%s, %s' % (dt.isoformat(), txt))
 
     def next(self):
-        if self.order:  # If an order already exists...
-            return  # ...then we cannot send another one, leave method
-        if not self.position:  # "If we are not in a position...
-            if self.sma_fast > self.sma_slow * 1.03:  # ...and the short-term SMA is higher than the long-term SMA...
-                # ...then create a buy order and store a reference to it
-                self.log('BUY CREATE, %.2f' % self.dataclose[0])
-                self.order = self.buy()
-        else:  # If we are already in a position...
-            if self.sma_fast < self.sma_slow * 0.97:  # ...and the short-term SMA is lower than the long-term SMA
-                # ...then create a sell order and store a reference to it
-                self.log('SELL CREATE, %.2f' % self.dataclose[0])
-                self.order = self.sell()
+        for d in self.datas:
+            dn = d._name
+            if self.markets[dn]['order']:  # If an order already exists...
+                return  # ...then we cannot send another one, leave method
+            if not self.getposition(d):  # "If we are not in a position...
+                if self.markets[dn]['sma_fast'] > self.markets[dn]['sma_slow']:  # ...and the short-term SMA is higher than the long-term SMA...
+                    # ...then create a buy order and store a reference to it
+                    self.log('BUY CREATE, %s, %.2f' % (dn, self.markets[dn]['close'][0]))
+                    oinfo = dict(dn=dn)
+                    self.markets[dn]['order'] = self.buy(data=d, addinfo=oinfo)
+            else:  # If we are already in a position...
+                if self.markets[dn]['sma_fast'] < self.markets[dn]['sma_slow'] * 0.97:  # ...and the short-term SMA is lower than the long-term SMA
+                    # ...then create a sell order and store a reference to it
+                    self.log('SELL CREATE, %s, %.2f' % (dn, self.markets[dn]['close'][0]))
+                    oinfo = dict(dn=dn)
+                    self.markets[dn]['order'] = self.sell(data=d, addinfo=oinfo)
