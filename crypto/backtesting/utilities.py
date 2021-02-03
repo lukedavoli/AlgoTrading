@@ -1,5 +1,6 @@
 import backtrader as bt
 import pandas as pd
+from datetime import datetime
 import sys
 import os
 
@@ -8,7 +9,7 @@ from dao import Dao
 
 PCT_99 = 99
 
-def get_candles(market):
+def get_candles(market, start_date, end_date):
     df_candles = None
     try:
         df_candles = pd.read_csv(
@@ -24,6 +25,12 @@ def get_candles(market):
         df_candles['date_time'] = pd.to_datetime(df_candles['date_time'])
         df_candles.set_index('date_time', inplace=True)
         df_candles.to_csv('candles/{}.csv'.format(market))
+    if start_date:
+        start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+        df_candles = df_candles[df_candles.index >= start_dt]
+    if end_date:
+        end_dt = datetime.strptime(end_date, '%Y-%m-%d')
+        df_candles = df_candles[df_candles.index <= end_dt]
     return df_candles
 
 
@@ -31,15 +38,14 @@ def calculate_pct_return(cerebro, cash):
     return ((cerebro.broker.getvalue() - cash) / cash) * 100
 
 
-def get_benchmark(strategy, markets, cash, commission):
+def get_benchmark(strategy, markets, markets_list, cash, commission):
     cerebro_bmrk = bt.Cerebro()
     cerebro_bmrk.broker.setcash(cash)
-    pct = PCT_99/len(markets)
-    cerebro_bmrk.addsizer(bt.sizers.PercentSizer, percents=pct)
+    buy_spend = (cash - 100) / len(markets)
     cerebro_bmrk.broker.setcommission(commission=commission)
-    for market in markets:
-        cerebro_bmrk.adddata(bt.feeds.PandasData(dataname=market))
-    cerebro_bmrk.addstrategy(strategy)
+    for i, market in enumerate(markets):
+        cerebro_bmrk.adddata(bt.feeds.PandasData(dataname=market), name=markets_list[i])
+    cerebro_bmrk.addstrategy(strategy, buy_spend=buy_spend)
     cerebro_bmrk.run()
     cerebro_bmrk.plot()
     bmrk_final_value = cerebro_bmrk.broker.getvalue()

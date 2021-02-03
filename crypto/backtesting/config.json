@@ -2,8 +2,15 @@
     "cash": 10000,
     "commission": 0.004,
     "strategy": "SMACrossover",
-    "markets": ["EOS-USDT", "NEO-USDT", "BAT-USDT"],
+    "markets": [
+        "BSV-USDT"
+    ],
+    "dates": {
+        "start": "2020-02-01", 
+        "end": null
+    },
     "parameters": [
-        {"fast": 50, "slow": 1000}
+        {"fast": 1440, "slow": 4320, "crossover_margin": 0.03},
+        {"fast": 1440, "slow": 5760, "crossover_margin": 0.03}
     ]
 }

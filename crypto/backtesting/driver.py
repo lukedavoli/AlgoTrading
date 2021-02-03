@@ -11,8 +11,9 @@ PCT_99 = 99
 if __name__ == '__main__':
     # parse command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("config", action="store")
-    parser.add_argument("-b", "--benchmark", action="store_true")
+    parser.add_argument("config", action="store")  # configuration file
+    parser.add_argument("-b", "--benchmark", action="store_true")  # benchmark
+    parser.add_argument("-p", "--plot", action="store_true")  # plot
     args = parser.parse_args()
 
     # read configuration options from JSON file
@@ -26,13 +27,13 @@ if __name__ == '__main__':
     market_candles = []
     markets_list = config['markets']
     for market in markets_list:
-        market_candles.append(utilities.get_candles(market))
+        market_candles.append(utilities.get_candles(market, config['dates']['start'], config['dates']['end']))
 
     if args.benchmark:
         # run the buy and hold strategy to set a benchmark for the strategy
         print("Getting benchmark with 'Buy and Hold' strategy...")
         bmrk_finalval, bmrk_pctreturn = utilities.get_benchmark(
-            BuyAndHold, market_candles, CASH, COMMISSION
+            BuyAndHold, market_candles, markets_list, CASH, COMMISSION
         )
 
     # run the strategy with each pair of parameters and collect necessary information
@@ -48,19 +49,23 @@ if __name__ == '__main__':
             cerebro_smax.adddata(bt.feeds.PandasData(dataname=market), name=markets_list[i])
         if STRATEGY == 'SMACrossover':
             cerebro_smax.addstrategy(
-                SMACrossover, sma_fast=param_set['fast'], sma_slow=param_set['slow']
+                SMACrossover, 
+                sma_fast=param_set['fast'], sma_slow=param_set['slow'],
+                crossover_margin=param_set['crossover_margin']
             )
+            print('\nBacktesting SMA Crossover: fast-{}, slow-{}, margin-{}...'.format(
+                param_set['fast'], param_set['slow'], param_set['crossover_margin']
+            ))
         elif STRATEGY == 'RSIResponse':
             pass # example of another strategy
         else:
             print("Invalid strategy")
             raise ValueError
         cerebro_smax.addanalyzer(TotalCommission, _name='totalcomm')
-        print('\nBacktesting SMA Crossover Strategy with short MA {} and long MA {}...'.format(
-            param_set['fast'], param_set['slow']
-        ))
+        
         strat = cerebro_smax.run()[0]
-        cerebro_smax.plot()
+        if args.plot:
+            cerebro_smax.plot()
 
         # collect results
         param_set['final_portfolio_value'] = cerebro_smax.broker.getvalue()
