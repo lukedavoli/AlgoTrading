@@ -7,8 +7,6 @@ import os
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from dao import Dao
 
-PCT_99 = 99
-
 def get_candles(market, start_date, end_date):
     df_candles = None
     try:
@@ -47,7 +45,6 @@ def get_benchmark(strategy, markets, markets_list, cash, commission):
         cerebro_bmrk.adddata(bt.feeds.PandasData(dataname=market), name=markets_list[i])
     cerebro_bmrk.addstrategy(strategy, buy_spend=buy_spend)
     cerebro_bmrk.run()
-    cerebro_bmrk.plot()
     bmrk_final_value = cerebro_bmrk.broker.getvalue()
     bmrk_pct_return = calculate_pct_return(cerebro_bmrk, cash)
     return bmrk_final_value, bmrk_pct_return

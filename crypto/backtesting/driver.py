@@ -2,11 +2,11 @@ import json
 import argparse
 
 import utilities
-from strategies import BuyAndHold, SMACrossover
+from strategies import BuyAndHold, SMACrossover, SmartBuyAndHold
 from analysers import TotalCommission
 from backtrader import bt
 
-PCT_99 = 99
+PCT_99 = 99.6
 
 if __name__ == '__main__':
     # parse command line arguments
@@ -37,44 +37,62 @@ if __name__ == '__main__':
         )
 
     # run the strategy with each pair of parameters and collect necessary information
-    results = []
+    parameters_results = []
     param_sets = config['parameters']
     # repeat the process with each set of parameters from the options file
     for param_set in param_sets:
-        cerebro_smax = bt.Cerebro()
-        cerebro_smax.broker.setcash(CASH)
-        cerebro_smax.addsizer(bt.sizers.PercentSizer, percents=PCT_99/len(market_candles))
-        cerebro_smax.broker.setcommission(commission=COMMISSION)
+        markets_results = []
         for i, market in enumerate(market_candles):
+            # set up simulator with cash, betsizer, commission, data for markets
+            cerebro_smax = bt.Cerebro()
+            cerebro_smax.broker.setcash(CASH)
+            cerebro_smax.addsizer(bt.sizers.PercentSizer, percents=PCT_99)
+            cerebro_smax.broker.setcommission(commission=COMMISSION)
             cerebro_smax.adddata(bt.feeds.PandasData(dataname=market), name=markets_list[i])
-        if STRATEGY == 'SMACrossover':
-            cerebro_smax.addstrategy(
-                SMACrossover, 
-                sma_fast=param_set['fast'], sma_slow=param_set['slow'],
-                crossover_margin=param_set['crossover_margin']
-            )
-            print('\nBacktesting SMA Crossover: fast-{}, slow-{}, margin-{}...'.format(
-                param_set['fast'], param_set['slow'], param_set['crossover_margin']
-            ))
-        elif STRATEGY == 'RSIResponse':
-            pass # example of another strategy
-        else:
-            print("Invalid strategy")
-            raise ValueError
-        cerebro_smax.addanalyzer(TotalCommission, _name='totalcomm')
-        
-        strat = cerebro_smax.run()[0]
-        if args.plot:
-            cerebro_smax.plot()
+            
+            # add a stratgey
+            if STRATEGY == 'SMACrossover':
+                cerebro_smax.addstrategy(
+                    SMACrossover, 
+                    sma_fast=param_set['fast'], sma_slow=param_set['slow'],
+                    crossover_margin=param_set['crossover_margin']
+                )
+                print('\nSMA Crossover: market-{} fast-{}, slow-{}, margin-{}...'.format(
+                    markets_list[i], param_set['fast'], param_set['slow'], param_set['crossover_margin']
+                ))
+            elif STRATEGY == 'SmartBuyAndHold':
+                cerebro_smax.addstrategy(
+                    SmartBuyAndHold, rsi_period=param_set['rsi_period'],
+                    pmt=param_set['pmt'], prt=param_set['prt']
+                )
+                print('\nSmart Buy and Hold: market-{} rsi period-{}, pmt-{}, prt-{}...'.format(
+                    markets_list[i], param_set['rsi_period'], param_set['pmt'], param_set['prt']
+                ))
+            else:
+                print("Invalid strategy")
+                raise ValueError
+            cerebro_smax.addanalyzer(TotalCommission, _name='totalcomm')
+            
+            strat = cerebro_smax.run()[0]
+            if args.plot:
+                cerebro_smax.plot()
 
-        # collect results
-        param_set['final_portfolio_value'] = cerebro_smax.broker.getvalue()
-        param_set['pct_return'] = utilities.calculate_pct_return(cerebro_smax, CASH)
-        if args.benchmark:
-            param_set['net_vs_benchmark'] = param_set['final_portfolio_value'] - bmrk_finalval
-            param_set['alpha'] = param_set['pct_return'] - bmrk_pctreturn
-        param_set['commission_costs'] = strat.analyzers.totalcomm.get_analysis()
-        results.append(param_set)
+            # collect results for this market with this set of parameters
+            mrkt_results = {}
+            mrkt_results['final_portfolio_value'] = cerebro_smax.broker.getvalue()
+            mrkt_results['pct_return'] = utilities.calculate_pct_return(cerebro_smax, CASH)
+            if args.benchmark:
+                mrkt_results['net_vs_benchmark'] = mrkt_results['final_portfolio_value'] - bmrk_finalval
+                mrkt_results['alpha'] = mrkt_results['pct_return'] - bmrk_pctreturn
+            mrkt_results['commission_costs'] = strat.analyzers.totalcomm.get_analysis()
+            markets_results.append(mrkt_results)
+        # Average the results for the markets in this parameter setup
+        param_results = {}
+        param_results['params'] = param_set
+        for key in markets_results[0].keys():
+            param_results[key] = sum(d[key] for d in markets_results) / len(markets_results)
+        parameters_results.append(param_results)
+
         
     print("\n----------------RESULTS----------------\n")
     if args.benchmark:
@@ -82,4 +100,4 @@ if __name__ == '__main__':
             bmrk_finalval, bmrk_pctreturn
         ))
     print("{} strategy results".format(STRATEGY))
-    print(json.dumps(results, indent=4))
+    print(json.dumps(parameters_results, indent=4))
