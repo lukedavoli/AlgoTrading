@@ -2,7 +2,7 @@ import json
 import argparse
 
 import utilities
-from strategies import BuyAndHold, SMACrossover, SmartBuyAndHold
+from strategies import BuyAndHold, SMACrossover, XHold
 from analysers import TotalCommission
 from backtrader import bt
 
@@ -20,7 +20,7 @@ if __name__ == '__main__':
     with open(args.config, 'r') as j:
         config = json.loads(j.read())
     CASH = config['cash']
-    COMMISSION = config['commission']
+    COMMISSION = config['commission']/100
     STRATEGY = config['strategy']
 
     # get the candles for all chosen markets
@@ -60,13 +60,14 @@ if __name__ == '__main__':
                 print('\nSMA Crossover: market-{} fast-{}, slow-{}, margin-{}...'.format(
                     markets_list[i], param_set['fast'], param_set['slow'], param_set['crossover_margin']
                 ))
-            elif STRATEGY == 'SmartBuyAndHold':
+            elif STRATEGY == 'XHold':
                 cerebro_smax.addstrategy(
-                    SmartBuyAndHold, rsi_period=param_set['rsi_period'],
-                    pmt=param_set['pmt'], prt=param_set['prt']
+                    XHold, ema_fast=param_set['ema_fast'], ema_slow=param_set['ema_slow'],
+                    pmt=param_set['pmt'], prt=param_set['prt'], brpsp=param_set['brpsp'],
+                    crossover_margin=param_set['crossover_margin']
                 )
-                print('\nSmart Buy and Hold: market-{} rsi period-{}, pmt-{}, prt-{}...'.format(
-                    markets_list[i], param_set['rsi_period'], param_set['pmt'], param_set['prt']
+                print('\nCrossover and Hold ({}):, ema_fast-{}, ema_slow-{}, pmt-{}, prt-{}, brpsp-{}...'.format(
+                    markets_list[i], param_set['ema_fast'], param_set['ema_slow'], param_set['pmt'], param_set['prt'], param_set['brpsp']
                 ))
             else:
                 print("Invalid strategy")

@@ -10,7 +10,7 @@
         "end": "2021-01-15"
     },
     "parameters": [
-        {"fast": 25, "slow": 200, "crossover_margin": 0.03},
-        {"fast": 25, "slow": 400, "crossover_margin": 0.03}
+        {"fast": 25, "slow": 200, "crossover_margin": 3},
+        {"fast": 25, "slow": 400, "crossover_margin": 3}
     ]
 }

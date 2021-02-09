@@ -115,29 +115,34 @@ class SMACrossover(bt.Strategy):
             if self.markets[dn]['order']:  # If an order already exists...
                 return  # ...then we cannot send another one, leave method
             if not self.getposition(d):  # "If we are not in a position...
-                if self.markets[dn]['sma_fast'] > self.markets[dn]['sma_slow'] * (1 + self.params.crossover_margin):  # ...and the short-term SMA is higher than the long-term SMA...
+                if self.markets[dn]['sma_fast'] > self.markets[dn]['sma_slow'] * (1 + self.params.crossover_margin/100):  # ...and the short-term SMA is higher than the long-term SMA...
                     # ...then create a buy order and store a reference to it
                     self.log('BUY CREATE, %s, %.2f' % (dn, self.markets[dn]['close'][0]))
                     oinfo = dict(dn=dn)
                     self.markets[dn]['order'] = self.buy(data=d, addinfo=oinfo)
             else:  # If we are already in a position...
-                if self.markets[dn]['sma_fast'] < self.markets[dn]['sma_slow'] * (1 - self.params.crossover_margin):  # ...and the short-term SMA is lower than the long-term SMA
+                if self.markets[dn]['sma_fast'] < self.markets[dn]['sma_slow'] * (1 - self.params.crossover_margin/100):  # ...and the short-term SMA is lower than the long-term SMA
                     # ...then create a sell order and store a reference to it
                     self.log('SELL CREATE, %s, %.2f' % (dn, self.markets[dn]['close'][0]))
                     oinfo = dict(dn=dn)
                     self.markets[dn]['order'] = self.sell(data=d, addinfo=oinfo)
 
 
-class SmartBuyAndHold(bt.Strategy):
-    params = (('rsi_period', None), ('pmt', None), ('prt', None))
+class XHold(bt.Strategy):
+    params = (
+        ('ema_fast', None), ('ema_slow', None), 
+        ('pmt', None), ('prt', None), ('brpsp', None),
+        ('crossover_margin', None)
+    )
 
     def __init__(self):
         self.markets = dict()
         for d in self.datas:
             dn = d._name
             self.markets[dn] = dict(
-                close = d.close, order = None, buyprice = None, buycomm = None,
-                rsi = bt.indicators.RSI_EMA(d, period=self.params.rsi_period, safediv=True)
+                close = d.close, order = None, buyprice = None, buycomm = None, peak=0, sell_ready=False,
+                ema_fast = bt.indicators.ExponentialMovingAverage(d, period=self.params.ema_fast),
+                ema_slow = bt.indicators.ExponentialMovingAverage(d, period=self.params.ema_slow),
             )
 
     def notify_order(self, order):
@@ -151,8 +156,8 @@ class SmartBuyAndHold(bt.Strategy):
                     order.executed.value,
                     order.executed.comm
                 ))
-                self.buyprice = order.executed.price
-                self.buycomm = order.executed.comm
+                self.markets[order.info.addinfo['dn']]['buy_price'] = order.executed.price
+                self.markets[order.info.addinfo['dn']]['buy_comm'] = order.executed.comm
             elif order.issell():  # ...and the order was a sell order
                 # ...then log the details of it
                 self.log('SELL EXECUTED, Price: %.2f, Cost: %.2f, Comm: %.2f' % (
@@ -183,8 +188,35 @@ class SmartBuyAndHold(bt.Strategy):
             if self.markets[dn]['order']:  # If an order already exists...
                 return  # ...then we cannot send another one, leave method
             if not self.getposition(d):  # "If we are not in a position...
-                # TODO buy logic here
+                if self.markets[dn]['ema_fast'] > self.markets[dn]['ema_slow'] * (1 + self.params.crossover_margin/100):  # ...and the short-term EMA is higher than the long-term SMA...
+                    # ...then create a buy order and store a reference to it
+                    self.log('BUY CREATE, %s, %.2f' % (dn, self.markets[dn]['close'][0]))
+                    oinfo = dict(dn=dn)
+                    self.markets[dn]['order'] = self.buy(data=d, addinfo=oinfo)
                 pass
             else:  # If we are already in a position...
-                # TODO sell logic here
-                pass
+                # if the close falls below our panic sell trigger, sell
+                if self.markets[dn]['close'][0] < self.markets[dn]['buy_price'] * (1 - self.params.brpsp/100):
+                    self.log('SELL CREATE, %s, %.2f' % (dn, self.markets[dn]['close'][0]))
+                    oinfo = dict(dn=dn)
+                    self.markets[dn]['order'] = self.sell(data=d, addinfo=oinfo)
+                    # Reset variables
+                    self.markets[dn]['peak'] = 0
+                    self.markets[dn]['sell_ready'] = False
+                # update the peak close price since we bought the market
+                if self.markets[dn]['close'][0] > self.markets[dn]['peak']:
+                    self.markets[dn]['peak'] = self.markets[dn]['close'][0]
+                # if the peak is greater than what we paid plus x percent, we are ready to sell 
+                if self.markets[dn]['peak'] >= self.markets[dn]['buy_price'] * (1 + self.params.pmt/100):
+                    self.markets[dn]['sell_ready'] = True
+                # if we are ready to sell and the close has retraced x percent of the current peak since buying, sell
+                profit = self.markets[dn]['peak'] - self.markets[dn]['buy_price']
+                retrace = self.markets[dn]['peak'] - self.markets[dn]['close'][0]
+                if self.markets[dn]['sell_ready'] and retrace > profit * (self.params.prt/100):
+                    # ...then create a sell order and store a reference to it
+                    self.log('SELL CREATE, %s, %.2f' % (dn, self.markets[dn]['close'][0]))
+                    oinfo = dict(dn=dn)
+                    self.markets[dn]['order'] = self.sell(data=d, addinfo=oinfo)
+                    # Reset variables
+                    self.markets[dn]['peak'] = 0
+                    self.markets[dn]['sell_ready'] = False

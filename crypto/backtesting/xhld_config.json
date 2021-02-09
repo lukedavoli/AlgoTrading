@@ -1,0 +1,18 @@
+{
+    "cash": 1000,
+    "commission": 0.35,
+    "strategy": "XHold",
+    "markets": [
+        "BSV-USDT", "EOS-USDT", "NEO-USDT"
+    ],
+    "dates": {
+        "start": "2020-01-10", 
+        "end": null
+    },
+    "parameters": [
+        {"ema_fast": 500, "ema_slow": 4000, "pmt": 10, "prt": 20, "brpsp": 100, "crossover_margin": 3},
+        {"ema_fast": 500, "ema_slow": 4000, "pmt": 20, "prt": 20, "brpsp": 100, "crossover_margin": 3},
+        {"ema_fast": 500, "ema_slow": 4000, "pmt": 10, "prt": 30, "brpsp": 100, "crossover_margin": 3},
+        {"ema_fast": 500, "ema_slow": 4000, "pmt": 20, "prt": 30, "brpsp": 100, "crossover_margin": 3}
+    ]
+}
