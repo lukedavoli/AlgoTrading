@@ -2,7 +2,6 @@ import time
 import yaml
 import sys
 import os
-import pandas as pd
 import logging
 from datetime import datetime, timedelta, date
 from io import StringIO
