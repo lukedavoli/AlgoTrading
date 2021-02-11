@@ -18,17 +18,18 @@ if __name__ == '__main__':
     av = AlphaVantage()
     db = Dao(asset='stocks')
 
-    MARKET = 'CCL'
+    MARKETS = ['CCL', 'JBH', 'XRO', 'VCX']
 
-    for y in range(1,3):
-        for m in range(1, 13):
-            candles = av.get_intraday_extended(symbol=MARKET, year=y, month=m)
-            for candle in candles:
-                db.add_candle(
-                    market=MARKET, date_time=candle['date_time'], open_=candle['open'], 
-                    high=candle['high'], low=candle['low'], close=candle['close'], 
-                    volume=candle['volume']
-                )
-                logging.info("Candle ({}|{}) added to database".format(MARKET, candle['date_time']))
+    for market in MARKETS:
+        for y in range(1,3):
+            for m in range(1, 13):
+                candles = av.get_intraday_extended(symbol=market, year=y, month=m)
+                for candle in candles:
+                    db.add_candle(
+                        market=market, date_time=candle['date_time'], open_=candle['open'], 
+                        high=candle['high'], low=candle['low'], close=candle['close'], 
+                        volume=candle['volume']
+                    )
+                    logging.info("Candle ({}|{}) added to database".format(market, candle['date_time']))
 
     
