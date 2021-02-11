@@ -11,7 +11,7 @@ def get_candles(market, start_date, end_date):
     df_candles = None
     try:
         df_candles = pd.read_csv(
-            'candles/{}.csv'.format(market), index_col='date_time', parse_dates=True
+            '../candles/{}.csv'.format(market), index_col='date_time', parse_dates=True
         )
     except FileNotFoundError:
         db = Dao()
@@ -22,7 +22,7 @@ def get_candles(market, start_date, end_date):
         df_candles.drop(columns='market', inplace=True)
         df_candles['date_time'] = pd.to_datetime(df_candles['date_time'])
         df_candles.set_index('date_time', inplace=True)
-        df_candles.to_csv('candles/{}.csv'.format(market))
+        df_candles.to_csv('../candles/{}.csv'.format(market))
     if start_date:
         start_dt = datetime.strptime(start_date, '%Y-%m-%d')
         df_candles = df_candles[df_candles.index >= start_dt]

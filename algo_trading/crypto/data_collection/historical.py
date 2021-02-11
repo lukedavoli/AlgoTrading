@@ -4,18 +4,14 @@ import sys
 import os
 from datetime import datetime, timedelta, date
 
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+from bittrex_api import Bittrex
+sys.path.insert(2, os.path.join(sys.path[0], '../..'))
 from candle import Candle
-from api import Bittrex
 from dao import Dao
 
 DAYS_AGO = int(sys.argv[1])
 ROWS_PER_DAY = 288
-MARKETS = [
-	'BTC-USDT', 'ETH-USDT', 'ADA-USDT', 'XLM-USDT', 'LINK-USDT', 'DOT-USDT', 'LTC-USDT', 'NEO-USDT',
-	'TRX-USDT', 'BSV-USDT', 'BCH-USDT', 'ENJ-USDT', 'LBC-USDT', 'BAT-USDT', 'ETC-USDT', 'DGB-USDT',
-	'DOGE-USDT', 'EOS-USDT', 'XTZ-USDT', 'ALGO-USDT', 'ATOM-USDT', 'RVN-USDT'
-]
+MARKETS = ['RVN-USDT']
 
 if __name__ == '__main__':
 	# Create API object
@@ -23,7 +19,7 @@ if __name__ == '__main__':
 
 	# Open connection with database
 	print("Opening database connection")
-	db = Dao()
+	db = Dao(asset='crypto')
 	
 	for market in MARKETS:
 		one_year_ago = date.today() - timedelta(days=DAYS_AGO)
@@ -40,8 +36,13 @@ if __name__ == '__main__':
 				print("Adding candles for market {} on {} to database".format(market, datetime.strftime(one_year_ago, "%Y-%m-%d")))
 				cndl_cnt = 0
 				for candle in candles:
-					next_candle = Candle(market=market, btrx_dict=candle)
-					db.add_candle(next_candle)
+					dt_object = datetime.strptime(candle['startsAt'], "%Y-%m-%dT%H:%M:%SZ")
+					date_time = datetime.strftime(dt_object, "%Y-%m-%d %H:%M:%S")
+					db.add_candle(
+						market=market, date_time=date_time, open_=candle['open'], 
+						high=candle['high'], low=candle['low'], close=candle['close'], 
+						volume=candle['quoteVolume']
+					)
 					cndl_cnt += 1
 				print("Added {} candles to database".format(cndl_cnt))
 			else:
