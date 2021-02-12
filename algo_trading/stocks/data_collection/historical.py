@@ -8,7 +8,6 @@ from io import StringIO
 
 from alphavantage_api import AlphaVantage
 sys.path.insert(2, os.path.join(sys.path[0], '../..'))
-from candle import Candle
 from dao import Dao
 
 logging.basicConfig(level=logging.INFO)
