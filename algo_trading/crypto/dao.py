@@ -11,10 +11,7 @@ class Dao:
 			login = yaml.load(file, Loader=yaml.FullLoader)['mysqldb']
 		self.connection = pymysql.connect(host=login['host'], user=login['user'], passwd=login['password'])
 		self.cursor = self.connection.cursor()
-		if asset == 'crypto':
-			self.cursor.execute("USE crypto;")
-		elif asset == 'stocks':
-			self.cursor.execute("USE stocks;")
+		self.cursor.execute("USE crypto;")
 
 
 	def close(self):

@@ -5,8 +5,7 @@ import os
 from datetime import datetime, timedelta, date
 
 from bittrex_api import Bittrex
-sys.path.insert(2, os.path.join(sys.path[0], '../..'))
-from candle import Candle
+sys.path.insert(2, os.path.join(sys.path[0], '..'))
 from dao import Dao
 
 DAYS_AGO = int(sys.argv[1])
