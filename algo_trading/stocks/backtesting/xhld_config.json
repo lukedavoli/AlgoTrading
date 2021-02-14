@@ -1,0 +1,14 @@
+{
+    "cash": 1000,
+    "commission": 0.30,
+    "strategy": "XHold",
+    "exchange": "NYSE",
+    "symbol": "K",
+    "dates": {
+        "start": null, 
+        "end": null
+    },
+    "parameters": [
+        {"ema_fast": 250, "ema_slow": 4000, "pmt": 10, "prt": 20, "brpsp": 100, "crossover_margin": 3}
+    ]
+}

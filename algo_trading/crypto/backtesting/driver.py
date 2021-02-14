@@ -6,7 +6,7 @@ from strategies import BuyAndHold, SMACrossover, XHold
 from analysers import TotalCommission
 from backtrader import bt
 
-PCT_99 = 99.6
+PCT_99 = 99
 
 if __name__ == '__main__':
     # parse command line arguments
@@ -27,7 +27,9 @@ if __name__ == '__main__':
     market_candles = []
     markets_list = config['markets']
     for market in markets_list:
-        market_candles.append(utilities.get_candles(market, config['dates']['start'], config['dates']['end']))
+        market_candles.append(utilities.get_candles(
+            market, config['dates']['start'], config['dates']['end'])
+        )
 
     if args.benchmark:
         # run the buy and hold strategy to set a benchmark for the strategy
@@ -36,19 +38,22 @@ if __name__ == '__main__':
             BuyAndHold, market_candles, markets_list, CASH, COMMISSION
         )
 
-    # run the strategy with each pair of parameters and collect necessary information
+    # run the strategy with each pair of parameters and collect necessary
+    # information
     parameters_results = []
     param_sets = config['parameters']
     # repeat the process with each set of parameters from the options file
     for param_set in param_sets:
         markets_results = []
         for i, market in enumerate(market_candles):
-            # set up simulator with cash, betsizer, commission, data for markets
+            # set up simulator with cash, betsizer, commission, data for market
             cerebro_smax = bt.Cerebro()
             cerebro_smax.broker.setcash(CASH)
             cerebro_smax.addsizer(bt.sizers.PercentSizer, percents=PCT_99)
             cerebro_smax.broker.setcommission(commission=COMMISSION)
-            cerebro_smax.adddata(bt.feeds.PandasData(dataname=market), name=markets_list[i])
+            cerebro_smax.adddata(
+                bt.feeds.PandasData(dataname=market), name=markets_list[i]
+            )
             
             # add a stratgey
             if STRATEGY == 'SMACrossover':
@@ -73,7 +78,7 @@ if __name__ == '__main__':
                 print("Invalid strategy")
                 raise ValueError
             cerebro_smax.addanalyzer(TotalCommission, _name='totalcomm')
-            
+  
             strat = cerebro_smax.run()[0]
             if args.plot:
                 cerebro_smax.plot()
@@ -94,7 +99,7 @@ if __name__ == '__main__':
             param_results[key] = sum(d[key] for d in markets_results) / len(markets_results)
         parameters_results.append(param_results)
 
-        
+   
     print("\n----------------RESULTS----------------\n")
     if args.benchmark:
         print("Buy and Hold (Benchmark)\nFinal Value: {}\nPercent Return: {}\n".format(

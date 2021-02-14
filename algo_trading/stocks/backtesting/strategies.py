@@ -2,14 +2,11 @@ import backtrader as bt
 
 
 class BuyAndHold(bt.Strategy):
-    params = (('buy_spend', 0),)
-     
     def __init__(self):
         self.markets = dict()
         for d in self.datas:
             dn = d._name
             self.markets[dn] = dict(close = d.close, order = None, buyprice = None, buycomm = None)
-        self.buy_spend = self.params.buy_spend
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:  # If the order is only submitted or accepted...
@@ -55,8 +52,7 @@ class BuyAndHold(bt.Strategy):
             if not self.getposition(d):  # If we are not in a position...
                 self.log('BUY CREATE, %s, %.2f' % (dn, self.markets[dn]['close'][0]))
                 oinfo = dict(dn=dn)
-                size = self.buy_spend / self.markets[dn]['close'][0]
-                self.markets[dn]['order'] = self.buy(data=d, addinfo=oinfo, size=size)
+                self.markets[dn]['order'] = self.buy(data=d, addinfo=oinfo)
 
 
 class XHold(bt.Strategy):
