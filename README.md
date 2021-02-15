@@ -4,3 +4,5 @@ Exploring and learning about algorithmic trading by getting hands on with some b
   * Cryptocurrency data collected from Bittrex API
   * US Stock market data collected from AlphaVantage API
 * Backtesting modules use the collected data and [backtrader](https://www.backtrader.com/) framework to test strategies
+
+![backtrader](https://i.imgur.com/Sv4AMS2.jpg)
